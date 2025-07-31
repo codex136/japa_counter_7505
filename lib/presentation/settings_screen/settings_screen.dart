@@ -146,25 +146,48 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _resetAllProgress() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Reset all counters and progress
-    await prefs.setInt('today_mala_count', 0);
+    // Reset all counters and progress to zero
     await prefs.setInt('current_count', 0);
+    await prefs.setInt('today_mala_count', 0);
     await prefs.setInt('total_mala_count', 0);
+    await prefs.setInt('total_lifetime_malas', 0);
+
+    // Reset all streak data
     await prefs.setInt('current_streak', 0);
     await prefs.setInt('best_streak', 0);
+    await prefs.setInt('longest_streak', 0);
 
-    // Clear daily progress data
-    final keys =
-        prefs.getKeys().where((key) => key.startsWith('daily_count_')).toList();
+    // Reset daily, weekly, monthly progress
+    await prefs.setInt('daily_malas', 0);
+    await prefs.setInt('weekly_malas', 0);
+    await prefs.setInt('monthly_malas', 0);
+
+    // Reset ranking and statistics
+    await prefs.setInt('personal_ranking', 0);
+
+    // Clear all daily progress data and date-specific entries
+    final keys = prefs
+        .getKeys()
+        .where((key) =>
+            key.startsWith('daily_count_') ||
+            key.startsWith('practice_date_') ||
+            key.startsWith('achievement_') ||
+            key.startsWith('milestone_'))
+        .toList();
+
     for (String key in keys) {
       await prefs.remove(key);
     }
+
+    // Reset last date to today to ensure fresh start
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    await prefs.setString('last_date', today);
 
     if (_isHapticsEnabled) {
       HapticFeedback.heavyImpact();
     }
 
-    _showSuccessToast('सभी प्रगति रीसेट कर दी गई');
+    _showSuccessToast('सभी प्रगति रीसेट कर दी गई - नई शुरुआत के लिए तैयार!');
   }
 
   void _showResetTodayDialog() {
